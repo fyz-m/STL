@@ -14,31 +14,41 @@ private:
 public:
 
     // Move constructor
-    explicit unique_ptr(const T*&& ptr) : m_ptr{ptr} {}
+    // Transfer ownership of resources
+    explicit unique_ptr(unique_ptr&& other) 
+            : m_ptr{other.get()}
+        {
+            other.m_ptr = nullptr;
+        }
+    
+    // Constructors from raw pointer
+    explicit unique_ptr(T&& other) : m_ptr{other} {}
 
     explicit unique_ptr(T* ptr) : m_ptr(ptr) {} 
-
+    
+    // Default constructor
     explicit unique_ptr() : m_ptr{nullptr} {}
 
-
+    // Return managed pointer
     T* get() const {
         return m_ptr;
     }
 
+    // Release ownership of pointer (no longer automatically managed) 
     T* release() {
         auto p = m_ptr;
         m_ptr = nullptr;
         return p;
     }
 
-    ~unique_ptr() {
-        // Only call delete if ptr is not nullptr
-        if (m_ptr)
-            delete m_ptr;    
-    }
+    // Free managed object
+    ~unique_ptr() {    
+        delete m_ptr;    
+    }   
 
+    // Point to another object, freeing the old one
     void reset(T* new_ptr) {
-        this->~unique_ptr();  
+        delete m_ptr;  
         m_ptr = new_ptr;
     }
 
@@ -52,7 +62,7 @@ public:
 
     // Move assignment
     void operator=(unique_ptr<T>&& p) {
-        this->~unique_ptr();
+        delete m_ptr;
         m_ptr = p.get();
         p = nullptr;
     }    
@@ -93,13 +103,11 @@ public:
     void operator=(const unique_ptr& ptr) = delete;
 
 };
-    template<typename _T, typename ... Args>
-    [[nodiscard]] unique_ptr<_T> 
+    template<typename T, typename ... Args>
+    [[nodiscard]] unique_ptr<T> 
     make_unique(Args&& ... args) {
-        auto ptr = new _T(std::forward<Args>(args)...);
-        if (!ptr) 
-            throw std::bad_alloc(); 
-        return unique_ptr<_T>(ptr);
+        auto ptr = new T(std::forward<Args>(args)...); 
+        return unique_ptr<T>(ptr);
     }
 
 } // end namespace
@@ -112,27 +120,22 @@ class entity {
     explicit entity(std::string& name, int id) 
             : name{name}, id{id}
             {
-                std::println("Copy constructor called");
+                // std::println("Copy constructor called");
             }
 
     explicit entity(std::string&& name, int id) 
             : name{std::move(name)}, id{id}
             {
-                std::println("Move constructor called");
+                // std::println("Move constructor called");
             } 
             
-    ~entity() {std::println("Calling enttiy destructor.");}
+    // ~entity() {std::println("Calling enttiy destructor.");}
 };
 
 int main() {
-            
-    auto p2 = lib::make_unique<entity>("Old name", 2);
-
-    entity entity1("Name", 4);
-
-    std::println("Name = {}", p2->name);        
-    p2.reset(new entity("New name", 2));
-    std::println("Name = {}", p2->name);        
+    
 
 
+    auto p2 {new int(2)}; 
+    std::println("{}", *p2);
 }
