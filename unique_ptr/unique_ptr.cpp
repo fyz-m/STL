@@ -51,7 +51,7 @@ public:
     }
 
     // Move assignment
-    void operator=(const unique_ptr<T>&& p) {
+    void operator=(unique_ptr<T>&& p) {
         this->~unique_ptr();
         m_ptr = p.get();
         p = nullptr;
