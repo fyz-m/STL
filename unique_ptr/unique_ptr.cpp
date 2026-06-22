@@ -1,6 +1,5 @@
-#include <print>
-#include <memory>
-
+#include <cstddef>
+#include <utility>
 
 namespace lib {
 
@@ -13,19 +12,25 @@ private:
 
 public:
 
+    // Delete the copy constructor
+    unique_ptr(const unique_ptr& ptr) = delete;
+
+    // Delete copy assignment 
+    void operator=(const unique_ptr& ptr) = delete;
+
     // Move constructor
     // Transfer ownership of resources
-     unique_ptr(unique_ptr&& other) 
+    unique_ptr(unique_ptr&& other) 
             : m_ptr{other.get()}
         {
             other.m_ptr = nullptr;
         }
 
     // Constructor from raw pointer
-    explicit unique_ptr(T* other) : m_ptr(other) {} 
+    explicit unique_ptr(T* other) : m_ptr{other} {}
+
+    explicit unique_ptr() : m_ptr{nullptr} {} 
     
-    // Default constructor
-    explicit unique_ptr() : m_ptr{nullptr} {}
 
     // Return managed pointer
     T* get() const {
@@ -34,9 +39,9 @@ public:
 
     // Release ownership of pointer (no longer automatically managed) 
     T* release() {
-        auto p = m_ptr;
+        auto old_p = m_ptr;
         m_ptr = nullptr;
-        return p;
+        return old_p;
     }
 
     // Free managed object
@@ -46,8 +51,9 @@ public:
 
     // Point to another object, freeing the old one
     // If no pointer is provided 
-    void reset(T* new_ptr) {
-        delete m_ptr;  
+    void reset(T* new_ptr = nullptr) {
+        if (m_ptr) 
+            delete m_ptr;  
         m_ptr = new_ptr;
     }
 
@@ -62,9 +68,9 @@ public:
     // Move assignment
     unique_ptr& operator=(unique_ptr<T>&& other) {
         // Prevent self-move
-        if (other != *this) {
-        this->reset(other.get());
-        other.m_ptr = nullptr;
+        if (*this != other) {
+          this->reset(other.get());
+          other.m_ptr = nullptr;
         }
         return *this;
     }    
@@ -100,11 +106,6 @@ public:
         return this->get() < p.get();
     }
 
-    // Delete the copy constructor
-    unique_ptr(const unique_ptr& ptr) = delete;
-
-    // Delete copy assignment 
-    void operator=(const unique_ptr& ptr) = delete;
 
 };
     template<typename T, typename ... Args>
@@ -115,38 +116,3 @@ public:
     }
 
 } // end namespace
-
-class entity {
-    public:
-    std::string name;
-    int id;
-
-    explicit entity(std::string& name, int id) 
-            : name{name}, id{id}
-            {
-                // std::println("Copy constructor called");
-            }
-
-    explicit entity(std::string&& name, int id) 
-            : name{std::move(name)}, id{id}
-            {
-                // std::println("Move constructor called");
-            } 
-            
-    // ~entity() {std::println("Calling enttiy destructor.");}
-};
-
-int main() {
-    auto e1 = lib::make_unique<entity>("E1", 1);
-    auto e2 = lib::make_unique<entity>("E2", 1);
-    std::println("{}", e1->name);
-    e1 = std::move(e2);
-    std::println("After move : {}", e1->name);
-    if (!e2.get()) 
-        std::println("E2 is now nullptr");
-
-    e1 = nullptr;
-    if (!e1.get()) 
-        std::println("E2 is now nullptr");
-
-}
