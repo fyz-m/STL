@@ -15,16 +15,14 @@ public:
 
     // Move constructor
     // Transfer ownership of resources
-    explicit unique_ptr(unique_ptr&& other) 
+     unique_ptr(unique_ptr&& other) 
             : m_ptr{other.get()}
         {
             other.m_ptr = nullptr;
         }
-    
-    // Constructors from raw pointer
-    explicit unique_ptr(T&& other) : m_ptr{other} {}
 
-    explicit unique_ptr(T* ptr) : m_ptr(ptr) {} 
+    // Constructor from raw pointer
+    explicit unique_ptr(T* other) : m_ptr(other) {} 
     
     // Default constructor
     explicit unique_ptr() : m_ptr{nullptr} {}
@@ -47,6 +45,7 @@ public:
     }   
 
     // Point to another object, freeing the old one
+    // If no pointer is provided 
     void reset(T* new_ptr) {
         delete m_ptr;  
         m_ptr = new_ptr;
@@ -61,38 +60,43 @@ public:
     }
 
     // Move assignment
-    void operator=(unique_ptr<T>&& p) {
-        delete m_ptr;
-        m_ptr = p.get();
-        p = nullptr;
+    unique_ptr& operator=(unique_ptr<T>&& other) {
+        // Prevent self-move
+        if (other != *this) {
+        this->reset(other.get());
+        other.m_ptr = nullptr;
+        }
+        return *this;
     }    
 
-    void operator=(std::nullptr_t) {
+    std::nullptr_t operator=(std::nullptr_t) {
+        delete m_ptr;
         m_ptr = nullptr;
+        return nullptr;
     }
 
     // Comparison operators overload
-    bool operator==(const unique_ptr<T> p) const {
+    bool operator==(const unique_ptr<T>& p) const {
         return this->get() == p.get();
     }
 
-    bool operator!=(const unique_ptr<T> p) const {
+    bool operator!=(const unique_ptr<T>& p) const {
         return this->get() != p.get();
     }
 
-    bool operator>=(const unique_ptr<T> p) const {
+    bool operator>=(const unique_ptr<T>& p) const {
         return this->get() >= p.get();
     }
 
-    bool operator<=(const unique_ptr<T> p) const {
+    bool operator<=(const unique_ptr<T>& p) const {
         return this->get() <= p.get();
     }
 
-    bool operator>(const unique_ptr<T> p) const {
+    bool operator>(const unique_ptr<T>& p) const {
         return this->get() > p.get();
     }
 
-    bool operator<(const unique_ptr<T> p) const {
+    bool operator<(const unique_ptr<T>& p) const {
         return this->get() < p.get();
     }
 
@@ -133,9 +137,16 @@ class entity {
 };
 
 int main() {
-    
+    auto e1 = lib::make_unique<entity>("E1", 1);
+    auto e2 = lib::make_unique<entity>("E2", 1);
+    std::println("{}", e1->name);
+    e1 = std::move(e2);
+    std::println("After move : {}", e1->name);
+    if (!e2.get()) 
+        std::println("E2 is now nullptr");
 
+    e1 = nullptr;
+    if (!e1.get()) 
+        std::println("E2 is now nullptr");
 
-    auto p2 {new int(2)}; 
-    std::println("{}", *p2);
 }
