@@ -68,7 +68,7 @@ public:
     // Move assignment
     unique_ptr& operator=(unique_ptr<T>&& other) {
         // Prevent self-move
-        if (*this != other) {
+        if (this != &other) {
           this->reset(other.get());
           other.m_ptr = nullptr;
         }
