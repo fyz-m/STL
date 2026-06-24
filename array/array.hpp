@@ -43,11 +43,9 @@ class Array {
             return *this;
         }
 
-        // delete old array
         delete[] m_Buffer;
-        m_Buffer = new T[N];
-
-        copyElementsFrom(other);
+        m_Buffer = other.m_Buffer;
+        other.m_Buffer = nullptr;
         return *this;
     }
 
