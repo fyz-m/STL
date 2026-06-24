@@ -33,13 +33,13 @@ class Array {
     }
 
     // Move constructor
-    Array(Array<T, N>&& other) noexcept
+    Array(Array&& other) noexcept
         : m_Buffer{other.m_Buffer} {
         other.m_Buffer = nullptr;
     }
 
     // Move assignment
-    Array& operator=(Array<T, N>&& other) noexcept {
+    Array& operator=(Array&& other) noexcept {
         if (this == &other) {
             return *this;
         }
@@ -79,6 +79,14 @@ class Array {
     void fill(const T& value) {
         for (int i = 0; i < N; ++i) {
             m_Buffer[i] = value;
+        }
+    }
+
+    void swap(Array<T, N>& other) noexcept {
+        for (int i = 0; i < N; ++i) {
+            auto temp = m_Buffer[i];
+            m_Buffer[i] = other[i];
+            other[i] = temp;
         }
     }
 

@@ -11,6 +11,7 @@ void test_copy_assignment();
 void test_move_assignment();
 void test_element_access();
 void test_fill();
+void test_swap();
 
 int main() {
     test_default_constructor();
@@ -20,6 +21,7 @@ int main() {
     test_move_assignment();
     test_element_access();
     test_fill();
+    test_swap();
 }
 
 void test_default_constructor() {
@@ -129,4 +131,22 @@ void test_fill() {
     for (int i = 0; i < 100; ++i) {
         assert(a[i] == 3);
     }
+}
+
+void test_swap() {
+    lib::Array<int, 3> a;
+    a[0] = 20;
+    a[1] = 25;
+    a[2] = 30;
+
+    lib::Array<int, 3> b;
+    b[0] = 1;
+    b[1] = 2;
+    b[2] = 3;
+
+    a.swap(b);
+
+    assert(a[0] == 1 && b[0] == 20);
+    assert(a[1] == 2 && b[1] == 25);
+    assert(a[2] == 3 && b[2] == 30);
 }
