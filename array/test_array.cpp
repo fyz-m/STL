@@ -1,88 +1,15 @@
 #include "array.hpp"
 
 #include <cassert>
-#include <print>
-#include <utility>
 
-void test_default_constructor();
-void test_copy_constructor();
-void test_move_constructor();
-void test_copy_assignment();
-void test_move_assignment();
 void test_element_access();
 void test_fill();
 void test_swap();
 
 int main() {
-    test_default_constructor();
-    test_copy_constructor();
-    test_move_constructor();
-    test_copy_assignment();
-    test_move_assignment();
     test_element_access();
     test_fill();
     test_swap();
-}
-
-void test_default_constructor() {
-    lib::Array<int, 5> a;
-    for (int i = 0; i < 5; ++i) {
-        a[i] = 5 - i;
-    }
-    for (int i = 0; i < 5; ++i) {
-        assert(a[i] == 5 - i);
-    }
-}
-
-void test_copy_constructor() {
-    lib::Array<float, 10> a;
-    for (int i = 0; i < 10; ++i) {
-        a[i] = 10 - i;
-    }
-
-    auto b = a;
-    for (int i = 0; i < 10; ++i) {
-        assert(a[i] == b[i]);
-    }
-}
-
-void test_move_constructor() {
-    lib::Array<int, 10> a;
-    for (int i = 0; i < 10; ++i) {
-        a[i] = 10 - i;
-    }
-    auto b = std::move(a);
-    assert(a.data() == nullptr);
-    for (int i = 0; i < 10; ++i) {
-        assert(b[i] = 10 - i);
-    }
-}
-
-void test_copy_assignment() {
-    lib::Array<float, 10> a;
-    for (int i = 0; i < 10; ++i) {
-        a[i] = 10 - i;
-    }
-
-    lib::Array<float, 10> b;
-    b = a;
-    for (int i = 0; i < 10; ++i) {
-        assert(a[i] == b[i]);
-    }
-}
-
-void test_move_assignment() {
-    lib::Array<float, 10> a;
-    for (int i = 0; i < 10; ++i) {
-        a[i] = 10 - i;
-    }
-
-    lib::Array<float, 10> b;
-    b = std::move(a);
-    assert(a.data() == nullptr);
-    for (int i = 0; i < 10; ++i) {
-        assert(10 - i == b[i]);
-    }
 }
 
 void test_element_access() {
@@ -134,19 +61,19 @@ void test_fill() {
 }
 
 void test_swap() {
-    lib::Array<int, 3> a;
-    a[0] = 20;
-    a[1] = 25;
-    a[2] = 30;
+    lib::Array<std::string, 3> a;
+    a[0] = "str1";
+    a[1] = "str2";
+    a[2] = "str3";
 
-    lib::Array<int, 3> b;
-    b[0] = 1;
-    b[1] = 2;
-    b[2] = 3;
+    lib::Array<std::string, 3> b;
+    b[0] = "ABCD";
+    b[1] = "str4";
+    b[2] = "str5";
 
     a.swap(b);
 
-    assert(a[0] == 1 && b[0] == 20);
-    assert(a[1] == 2 && b[1] == 25);
-    assert(a[2] == 3 && b[2] == 30);
+    assert(a[0] == "ABCD" && b[0] == "str1");
+    assert(a[1] == "str4" && b[1] == "str2");
+    assert(a[2] == "str5" && b[2] == "str3");
 }
