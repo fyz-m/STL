@@ -9,8 +9,8 @@ void test_move_constructor();
 
 int main() {
     test_default_constructor();
-    test_move_constructor();
     test_copy_constructor();
+    test_move_constructor();
 }
 
 void test_default_constructor() {
@@ -33,6 +33,19 @@ void test_copy_constructor() {
     for (int i = 0; i < 10; ++i) {
         assert(a[i] == b[i]);
     }
+
+    // self copy
+    a = a;
 }
 
-void test_move_constructor() {}
+void test_move_constructor() {
+    lib::Array<int, 10> a;
+    for (int i = 0; i < 10; ++i) {
+        a[i] = 10 - i;
+    }
+    auto b = std::move(a);
+    assert(a.data() == nullptr);
+    for (int i = 0; i < 10; ++i) {
+        assert(b[i] = 10 - i);
+    }
+}
