@@ -11,11 +11,11 @@ class shared_ptr {
     size_t* m_Ptr_count{};
 
   public:
-    shared_ptr()
-        : m_Ptr{nullptr}, m_Ptr_count{new size_t(1)} {}
+    shared_ptr();
 
     explicit shared_ptr(T* other)
-        : m_Ptr{other}, m_Ptr_count(new size_t(1)) {}
+        : m_Ptr{other}, m_Ptr_count(new size_t(1)) {
+    }
 
     // Copy constructor
     shared_ptr(const shared_ptr& other)
@@ -24,7 +24,7 @@ class shared_ptr {
     }
 
     // Move constructor
-    shared_ptr(shared_ptr&& other)
+    shared_ptr(shared_ptr&& other) noexcept
         : m_Ptr(other.get()), m_Ptr_count(other.m_Ptr_count) {
         // Set to nullptr so other's destructor doesn't decrement count
         other.m_Ptr_count = nullptr;
@@ -49,7 +49,7 @@ class shared_ptr {
     }
 
     // Move assignment
-    shared_ptr& operator=(shared_ptr&& other) {
+    shared_ptr& operator=(shared_ptr&& other) noexcept {
         if (this != &other) {
             reset();
             copyFrom(other);
@@ -59,7 +59,9 @@ class shared_ptr {
         return *this;
     }
 
-    T* get() const { return m_Ptr; }
+    T* get() const {
+        return m_Ptr;
+    }
 
     // Release ownership and set members to null
     void reset() {
@@ -69,7 +71,7 @@ class shared_ptr {
             return;
 
         // If *this is the only ptr to obj
-        else if (isUnique()) {
+        if (isUnique()) {
             delete m_Ptr;
             delete m_Ptr_count;
         } else
@@ -97,7 +99,7 @@ class shared_ptr {
     // Swap resources wih another shared_ptr
     void swap(shared_ptr& other) {
         auto this_ptr = m_Ptr;
-        auto this_Ptr_count = m_Ptr_count;
+        auto* this_Ptr_count = m_Ptr_count;
         copyFrom(other);
 
         other.m_Ptr = this_ptr;
@@ -110,13 +112,21 @@ class shared_ptr {
         return 0;
     }
 
-    bool isUnique() const { return useCount() == 1; }
+    bool isUnique() const {
+        return useCount() == 1;
+    }
 
-    T& operator*() const { return *m_Ptr; }
+    T& operator*() const {
+        return *m_Ptr;
+    }
 
-    T* operator->() const { return m_Ptr; }
+    T* operator->() const {
+        return m_Ptr;
+    }
 
-    explicit operator bool() const { return m_Ptr; }
+    explicit operator bool() const {
+        return m_Ptr;
+    }
 
   private:
     // Copy members of other shared_ptr

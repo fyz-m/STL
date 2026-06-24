@@ -25,13 +25,17 @@ class unique_ptr {
 
     // Constructor from raw pointer
     explicit unique_ptr(T* other)
-        : m_ptr{other} {}
+        : m_ptr{other} {
+    }
 
     explicit unique_ptr()
-        : m_ptr{nullptr} {}
+        : m_ptr{nullptr} {
+    }
 
     // Return managed pointer
-    T* get() const { return m_ptr; }
+    T* get() const {
+        return m_ptr;
+    }
 
     // Release ownership of pointer (no longer automatically managed)
     T* release() {
@@ -41,7 +45,9 @@ class unique_ptr {
     }
 
     // Free managed object
-    ~unique_ptr() { delete m_ptr; }
+    ~unique_ptr() {
+        delete m_ptr;
+    }
 
     // Point to another object, freeing the old one
     // If no pointer is provided
@@ -51,9 +57,13 @@ class unique_ptr {
         m_ptr = new_ptr;
     }
 
-    T& operator*() const { return *m_ptr; }
+    T& operator*() const {
+        return *m_ptr;
+    }
 
-    T* operator->() const { return m_ptr; }
+    T* operator->() const {
+        return m_ptr;
+    }
 
     // Move assignment
     unique_ptr& operator=(unique_ptr<T>&& other) {
@@ -72,17 +82,29 @@ class unique_ptr {
     }
 
     // Comparison operators overload
-    bool operator==(const unique_ptr<T>& p) const { return this->get() == p.get(); }
+    bool operator==(const unique_ptr<T>& p) const {
+        return this->get() == p.get();
+    }
 
-    bool operator!=(const unique_ptr<T>& p) const { return this->get() != p.get(); }
+    bool operator!=(const unique_ptr<T>& p) const {
+        return this->get() != p.get();
+    }
 
-    bool operator>=(const unique_ptr<T>& p) const { return this->get() >= p.get(); }
+    bool operator>=(const unique_ptr<T>& p) const {
+        return this->get() >= p.get();
+    }
 
-    bool operator<=(const unique_ptr<T>& p) const { return this->get() <= p.get(); }
+    bool operator<=(const unique_ptr<T>& p) const {
+        return this->get() <= p.get();
+    }
 
-    bool operator>(const unique_ptr<T>& p) const { return this->get() > p.get(); }
+    bool operator>(const unique_ptr<T>& p) const {
+        return this->get() > p.get();
+    }
 
-    bool operator<(const unique_ptr<T>& p) const { return this->get() < p.get(); }
+    bool operator<(const unique_ptr<T>& p) const {
+        return this->get() < p.get();
+    }
 };
 
 template <typename T, typename... Args>
