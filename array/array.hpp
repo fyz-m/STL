@@ -1,5 +1,6 @@
 
 #include <cstddef>
+#include <stdexcept>
 namespace lib {
 
 template <typename T, size_t N>
@@ -59,6 +60,38 @@ class Array {
 
     T* data() const {
         return m_Buffer;
+    }
+
+    T& front() const {
+        return m_Buffer[0];
+    }
+
+    T& back() const {
+        return m_Buffer[N - 1];
+    }
+
+    T& at(int index) const {
+        if (index < 0 || index >= N)
+            throw std::out_of_range("Out of bounds array access.");
+        return m_Buffer[index];
+    }
+
+    void fill(const T& value) {
+        for (int i = 0; i < N; ++i) {
+            m_Buffer[i] = value;
+        }
+    }
+
+    [[nodiscard]] size_t size() const {
+        return N;
+    }
+
+    [[nodiscard]] size_t max_size() const {
+        return N;
+    }
+
+    [[nodiscard]] bool empty() const {
+        return N == 0;
     }
 
   private:

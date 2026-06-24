@@ -2,12 +2,15 @@
 
 #include <cassert>
 #include <print>
+#include <utility>
 
 void test_default_constructor();
 void test_copy_constructor();
 void test_move_constructor();
 void test_copy_assignment();
 void test_move_assignment();
+void test_element_access();
+void test_fill();
 
 int main() {
     test_default_constructor();
@@ -15,6 +18,8 @@ int main() {
     test_move_constructor();
     test_copy_assignment();
     test_move_assignment();
+    test_element_access();
+    test_fill();
 }
 
 void test_default_constructor() {
@@ -63,6 +68,7 @@ void test_copy_assignment() {
         assert(a[i] == b[i]);
     }
 }
+
 void test_move_assignment() {
     lib::Array<float, 10> a;
     for (int i = 0; i < 10; ++i) {
@@ -74,5 +80,53 @@ void test_move_assignment() {
     assert(a.data() == nullptr);
     for (int i = 0; i < 10; ++i) {
         assert(10 - i == b[i]);
+    }
+}
+
+void test_element_access() {
+    lib::Array<int, 10> a;
+    a[0] = 10;
+    a[2] = 20;
+    a[3] = 30;
+    a[4] = 40;
+    a[5] = 50;
+    a[6] = 60;
+    a[7] = 70;
+    a[8] = 8000;
+    a[9] = 1234;
+
+    assert(a.front() == 10);
+    assert(a.back() == 1234);
+    assert(a.at(3) == 30);
+    assert(a.at(2) == 20);
+    assert(a.at(8) == 8000);
+    assert(a.at(9) == 1234);
+    assert(a.at(0) == 10);
+
+    int error_count{0};
+    while (error_count < 3) {
+        try {
+            a.at(-1);
+            a.at(10);
+            a.at(100);
+            break;
+        } catch (const std::out_of_range& e) {
+            error_count = error_count + 1;
+            continue;
+        }
+    }
+    assert(error_count == 3);
+
+    assert(a.empty() == false);
+    lib::Array<int, 0> b;
+    assert(b.empty());
+}
+
+void test_fill() {
+    lib::Array<int, 100> a;
+
+    a.fill(3);
+    for (int i = 0; i < 100; ++i) {
+        assert(a[i] == 3);
     }
 }
