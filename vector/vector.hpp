@@ -1,6 +1,6 @@
-
 #include <cstddef>
 #include <utility>
+
 namespace lib {
 
 template <typename T>
@@ -32,11 +32,45 @@ class Vector {
         fill(std::move(initVal));
     }
 
+    // Copy constructor
+    Vector(const Vector<T>& other)
+        : m_Size{other.size()} {
+        copyElementsFrom(other);
+    }
+
+    // Copy assignment
+    Vector<T>& operator=(const Vector<T>& other) {
+        if (this == &other)
+            return *this;
+
+        freeResources();
+        m_Size = other.size();
+        m_Capacity = other.capacity();
+        m_Buffer = (T*)::operator new(m_Capacity * sizeof(T));
+        copyElementsFrom(other);
+    }
+
+    // Move constructor
+    Vector(Vector<T>&& other) noexcept
+        : m_Size{other.size()}, m_Capacity(other.capacity()), m_Buffer{other.data()} {
+        other.data() = nullptr;
+    }
+
+    // Move assignment
+    Vector<T>& operator=(Vector<T>&& other) noexcept {
+        if (this == &other)
+            return *this;
+
+        freeResources();
+        m_Size = other.size();
+        m_Capacity = other.capacity();
+        m_Buffer = other.data();
+        other.data() = nullptr;
+    }
+
     ~Vector() {
-        for (size_t i = 0; i < size(); ++i) {
-            m_Buffer[i].~T();
-        }
-        ::operator delete(m_Buffer);
+        if (m_Buffer)
+            freeResources();
     }
 
     void reserve(const size_t new_capacity) {
@@ -48,19 +82,22 @@ class Vector {
         m_Buffer = static_cast<T*>((::operator new(new_capacity * sizeof(T))));
         m_Capacity = new_capacity;
 
-        for (size_t i = 0; i < size(); ++i) {
-            // Call T's default constructor to initialize the sizeof(T) bytes at address m_Buffer[i]
-            // We need to call the default constructor because T's copy/move assignment assumes
-            // that m_Buffer[i] is an existing T object and will access that object's members
-            //
-            // For example, if T is shared_ptr, operator=() will attempt to dereference the bytes in
-            // m_Buffer[i] and possibly delete it. If those bytes are garbage data we get UB, so we
-            // must initialize those bytes to their default by calling T's default constructor
-            new (&m_Buffer[i]) T();
-            m_Buffer[i] = std::move(old_buffer[i]);
-            old_buffer[i].~T();
+        if (size()) {
+            for (size_t i = 0; i < size(); ++i) {
+                // Call T's default constructor to initialize the sizeof(T) bytes at address
+                // m_Buffer[i] We need to call the default constructor because T's copy/move
+                // assignment assumes that m_Buffer[i] is an existing T object and will access that
+                // object's members
+                //
+                // For example, if T is shared_ptr, operator=() will attempt to dereference the
+                // bytes in m_Buffer[i] and possibly delete it. If those bytes are garbage data we
+                // get UB, so we must initialize those bytes to their default by calling T's default
+                // constructor
+                new (&m_Buffer[i]) T();
+                m_Buffer[i] = std::move(old_buffer[i]);
+                old_buffer[i].~T();
+            }
         }
-
         ::operator delete(old_buffer);
     }
 
@@ -71,6 +108,22 @@ class Vector {
         ::new (&m_Buffer[m_Size]) T();
         m_Buffer[m_Size] = val;
         m_Size++;
+    }
+
+    void push_back(T&& val) {
+        if (m_Size >= m_Capacity) {
+            reserve(defaultResize());
+        }
+        ::new (&m_Buffer[m_Size]) T();
+        m_Buffer[m_Size] = std::move(val);
+        m_Size++;
+    }
+
+    void pop_back() {
+        if (size() > 0) {
+            back().~T();
+            --m_Size;
+        }
     }
 
     template <typename... Args>
@@ -87,9 +140,16 @@ class Vector {
             m_Buffer[i] = val;
         }
     }
+
     void fill(const T&& val) {
         for (size_t i = 0; i < size(); i++) {
             m_Buffer[i] = std::move(val);
+        }
+    }
+
+    void clear() {
+        for (size_t i = 0; i < size(); i++) {
+            m_Buffer[i].~T();
         }
     }
 
@@ -123,8 +183,25 @@ class Vector {
   private:
     [[nodiscard]] size_t defaultResize() const {
         if (!size())
-            return 2;
+            return 10;
         return size() * 2;
+    }
+
+    void freeResources() {
+
+        if (size_t i = 0; !empty()) {
+            for (; i < size(); ++i) {
+                m_Buffer[i].~T();
+            }
+        }
+        ::operator delete(m_Buffer);
+    }
+
+    void copyElementsFrom(const Vector<T>& other) {
+        for (size_t i = 0; i < size(); ++i) {
+            ::new (&m_Buffer[i]) T();
+            m_Buffer[i] = other[i];
+        }
     }
 };
 
