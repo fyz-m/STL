@@ -46,14 +46,15 @@ class Vector {
         freeResources();
         m_Size = other.size();
         m_Capacity = other.capacity();
-        m_Buffer = (T*)::operator new(m_Capacity * sizeof(T));
+        m_Buffer = static_cast<T*>(::operator new(m_Capacity * sizeof(T)));
         copyElementsFrom(other);
+        return *this;
     }
 
     // Move constructor
     Vector(Vector<T>&& other) noexcept
         : m_Size{other.size()}, m_Capacity(other.capacity()), m_Buffer{other.data()} {
-        other.data() = nullptr;
+        other.m_Buffer = nullptr;
     }
 
     // Move assignment
@@ -65,12 +66,12 @@ class Vector {
         m_Size = other.size();
         m_Capacity = other.capacity();
         m_Buffer = other.data();
-        other.data() = nullptr;
+        other.m_Buffer = nullptr;
+        return *this;
     }
 
     ~Vector() {
-        if (m_Buffer)
-            freeResources();
+        freeResources();
     }
 
     void reserve(const size_t new_capacity) {
@@ -82,22 +83,21 @@ class Vector {
         m_Buffer = static_cast<T*>((::operator new(new_capacity * sizeof(T))));
         m_Capacity = new_capacity;
 
-        if (size()) {
-            for (size_t i = 0; i < size(); ++i) {
-                // Call T's default constructor to initialize the sizeof(T) bytes at address
-                // m_Buffer[i] We need to call the default constructor because T's copy/move
-                // assignment assumes that m_Buffer[i] is an existing T object and will access that
-                // object's members
-                //
-                // For example, if T is shared_ptr, operator=() will attempt to dereference the
-                // bytes in m_Buffer[i] and possibly delete it. If those bytes are garbage data we
-                // get UB, so we must initialize those bytes to their default by calling T's default
-                // constructor
-                new (&m_Buffer[i]) T();
-                m_Buffer[i] = std::move(old_buffer[i]);
-                old_buffer[i].~T();
-            }
+        for (size_t i = 0; i < size(); ++i) {
+            // Call T's default constructor to initialize the sizeof(T) bytes at address
+            // m_Buffer[i] We need to call the default constructor because T's copy/move
+            // assignment assumes that m_Buffer[i] is an existing T object and will access that
+            // object's members
+            //
+            // For example, if T is shared_ptr, operator=() will attempt to dereference the
+            // bytes in m_Buffer[i] and possibly delete it. If those bytes are garbage data we
+            // get UB, so we must initialize those bytes to their default by calling T's default
+            // constructor
+            new (&m_Buffer[i]) T();
+            m_Buffer[i] = std::move(old_buffer[i]);
+            old_buffer[i].~T();
         }
+
         ::operator delete(old_buffer);
     }
 
@@ -151,6 +151,7 @@ class Vector {
         for (size_t i = 0; i < size(); i++) {
             m_Buffer[i].~T();
         }
+        m_Size = 0;
     }
 
     [[nodiscard]] size_t size() const {
@@ -189,12 +190,11 @@ class Vector {
 
     void freeResources() {
 
-        if (size_t i = 0; !empty()) {
-            for (; i < size(); ++i) {
-                m_Buffer[i].~T();
-            }
+        for (size_t i = 0; i < size(); ++i) {
+            m_Buffer[i].~T();
         }
-        ::operator delete(m_Buffer);
+        if (m_Buffer)
+            ::operator delete(m_Buffer);
     }
 
     void copyElementsFrom(const Vector<T>& other) {
