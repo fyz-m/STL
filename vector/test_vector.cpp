@@ -4,21 +4,15 @@
 #include <print>
 #include <string>
 
+namespace {
+
 void test_from_default_constructor();
 void test_copy_constructor();
 void test_move_constructor();
 void test_init_constructor();
 void test_reserve();
-
-int main() {
-    test_from_default_constructor();
-    test_copy_constructor();
-    test_move_constructor();
-    test_init_constructor();
-    test_reserve();
-
-    std::println("All tests passed!");
-}
+void test_copy_assignment();
+void test_move_assignment();
 
 void test_from_default_constructor() {
     lib::Vector<std::string> v1;
@@ -123,4 +117,52 @@ void test_reserve() {
     }
     // assert no new buffer was made
     assert(vec.data() == buffer);
+}
+
+void test_copy_assignment() {
+    lib::Vector<std::string> vec{5, "init"};
+    lib::Vector<std::string> vec2{3, "init2"};
+    auto* vec2_old_buffer = vec2.data();
+
+    vec2 = vec;
+    assert(vec.size() == vec2.size());
+    assert(vec.capacity() == vec2.capacity());
+    assert(vec.data() != vec2.data());
+    assert(vec.data() != vec2_old_buffer);
+
+    for (size_t i = 0; i < vec.size(); ++i) {
+        assert(vec[i] == vec2[i]);
+    }
+}
+void test_move_assignment() {
+    lib::Vector<std::string> vec{5, "init"};
+    auto vec_size = vec.size();
+    auto vec_capacity = vec.capacity();
+    auto* vec_buffer = vec.data();
+
+    lib::Vector<std::string> vec2{3, "init2"};
+
+    vec2 = std::move(vec);
+    assert(vec.data() == nullptr);
+    assert(vec_buffer == vec2.data());
+    assert(vec_size == vec2.size());
+    assert(vec_capacity == vec2.capacity());
+
+    for (size_t i = 0; i < vec.size(); ++i) {
+        assert(vec2[i] == "init");
+    }
+}
+
+} // namespace
+
+int main() {
+    test_from_default_constructor();
+    test_copy_constructor();
+    test_move_constructor();
+    test_init_constructor();
+    test_reserve();
+    test_copy_assignment();
+    test_move_assignment();
+
+    std::println("All tests passed!");
 }
