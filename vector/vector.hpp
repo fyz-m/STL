@@ -20,15 +20,15 @@ class Vector {
     Vector() = default;
 
     Vector(size_t N)
-        : m_Size(N) {}
+        : m_Capacity(N) {}
 
     Vector(size_t N, const T& initVal)
-        : m_Size(N) {
+        : m_Capacity(N), m_Size(N) {
         fill(initVal);
     }
 
     Vector(size_t N, T&& initVal)
-        : m_Size(N) {
+        : m_Capacity(N), m_Size(N) {
         fill(std::move(initVal));
     }
 
@@ -143,6 +143,7 @@ class Vector {
 
     void fill(const T&& val) {
         for (size_t i = 0; i < size(); i++) {
+            ::new (&m_Buffer[i]) T();
             m_Buffer[i] = std::move(val);
         }
     }
@@ -189,12 +190,10 @@ class Vector {
     }
 
     void freeResources() {
-
-        for (size_t i = 0; i < size(); ++i) {
-            m_Buffer[i].~T();
-        }
-        if (m_Buffer)
+        if (m_Buffer) {
+            clear();
             ::operator delete(m_Buffer);
+        }
     }
 
     void copyElementsFrom(const Vector<T>& other) {
