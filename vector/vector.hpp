@@ -137,6 +137,7 @@ class Vector {
 
     void fill(const T& val) {
         for (size_t i = 0; i < size(); i++) {
+            ::new (&m_Buffer[i]) T();
             m_Buffer[i] = val;
         }
     }
