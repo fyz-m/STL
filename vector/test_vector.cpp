@@ -89,12 +89,23 @@ void test_move_constructor() {
 }
 
 void test_init_constructor() {
+    // Rvalue initialization value
     lib::Vector<std::string> vec(5, "init_string");
     assert(vec.size() == 5);
     assert(vec.capacity() == 5);
 
     for (size_t i = 0; i < vec.size(); ++i) {
         assert(vec[i] == "init_string");
+    }
+
+    // Lvalue initialization value
+    std::string str = "init_str";
+    lib::Vector<std::string> vec2(5, str);
+    assert(vec2.size() == 5);
+    assert(vec2.capacity() == 5);
+
+    for (size_t i = 0; i < vec2.size(); ++i) {
+        assert(vec2[i] == str);
     }
 }
 
