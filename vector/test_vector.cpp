@@ -13,6 +13,7 @@ void test_init_constructor();
 void test_reserve();
 void test_copy_assignment();
 void test_move_assignment();
+void test_emplace();
 
 void test_from_default_constructor() {
     lib::Vector<std::string> v1;
@@ -145,6 +146,7 @@ void test_copy_assignment() {
         assert(vec[i] == vec2[i]);
     }
 }
+
 void test_move_assignment() {
     lib::Vector<std::string> vec{5, "init"};
     auto vec_size = vec.size();
@@ -164,6 +166,82 @@ void test_move_assignment() {
     }
 }
 
+struct test {
+
+    bool* moved{};
+    bool* copied{};
+    bool* destroyed{};
+    bool constructed{false};
+
+    test() = default;
+
+    test(bool* moved, bool* copied)
+        : moved{moved}, copied{copied}, constructed(true) {}
+
+    test(bool* destroyed, bool* moved, bool* copied)
+        : moved{moved}, copied{copied}, destroyed(destroyed), constructed(true) {}
+
+    test(const test& other) {
+        *other.copied = true;
+    }
+
+    test& operator=(const test& other) {
+        *other.copied = true;
+        return *this;
+    }
+
+    test& operator=(test&& other) {
+        *other.moved = true;
+        return *this;
+    }
+
+    test(test&& other) noexcept {
+        *other.moved = true;
+    }
+
+    ~test() {
+        if (destroyed)
+            *destroyed = true;
+    }
+};
+
+void test_emplace() {
+    lib::Vector<test> vec;
+    bool moved = false;
+    bool copied = false;
+
+    vec.emplace_back(&moved, &copied);
+    assert(vec[0].constructed == true);
+    assert(*vec[0].copied == false);
+    assert(*vec[0].moved == false);
+
+    vec.emplace_back(&moved, &copied);
+    assert(vec[1].constructed == true);
+    assert(*vec[1].copied == false);
+    assert(*vec[1].moved == false);
+
+    vec.push_back(vec[0]);
+    assert(*vec[0].copied == true);
+
+    test t1(&moved, &copied);
+    vec.push_back(t1);
+    assert(*t1.copied == true);
+
+    test t2(&moved, &copied);
+    vec.push_back(std::move(t2));
+    assert(*t2.moved == true);
+
+    bool destroyed = false;
+    vec.emplace_back(&destroyed, &moved, &copied);
+    auto size = vec.size();
+    auto capacity = vec.capacity();
+
+    vec.pop_back();
+    assert(vec.size() == (size - 1));
+    assert(vec.capacity() == capacity);
+    assert(destroyed);
+}
+
 } // namespace
 
 int main() {
@@ -174,6 +252,7 @@ int main() {
     test_reserve();
     test_copy_assignment();
     test_move_assignment();
+    test_emplace();
 
     std::println("All tests passed!");
 }
